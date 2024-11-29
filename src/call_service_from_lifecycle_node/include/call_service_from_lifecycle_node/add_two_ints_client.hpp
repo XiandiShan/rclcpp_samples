@@ -17,12 +17,11 @@ public:
         : node_(node)
     {
         client_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-
+        client_ = node_->create_client<example_interfaces::srv::AddTwoInts>("/add_two_ints", rmw_qos_profile_services_default, client_cb_group_);
     }
 
     void execute()
     {
-        client_ = node_->create_client<example_interfaces::srv::AddTwoInts>("/add_two_ints", rmw_qos_profile_services_default, client_cb_group_);
         RCLCPP_INFO(node_->get_logger(), "Execute /add_two_ints");
 
         while(!client_->wait_for_service(std::chrono::seconds(5))) {
