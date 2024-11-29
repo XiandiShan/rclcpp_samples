@@ -15,11 +15,13 @@ class LifecycleClientNode
 public:
     LifecycleClientNode(const std::shared_ptr<rclcpp_lifecycle::LifecycleNode>& node)
         : node_(node)
-    {}
+    {
+        client_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+
+    }
 
     void execute()
     {
-        auto client_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
         client_ = node_->create_client<example_interfaces::srv::AddTwoInts>("/add_two_ints", rmw_qos_profile_services_default, client_cb_group_);
         RCLCPP_INFO(node_->get_logger(), "Execute /add_two_ints");
 
@@ -57,4 +59,5 @@ public:
 private:
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
     rclcpp::Client<example_interfaces::srv::AddTwoInts>::SharedPtr client_;
+    rclcpp::CallbackGroup::SharedPtr client_cb_group_;
 };
