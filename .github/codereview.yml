@@ -1,0 +1,59 @@
+name: Code Review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+env:
+  REVIEW_API_KEY: ${{ secrets.REVIEW_API_KEY }}
+  REVIEW_API_MODEL: ${{ secrets.REVIEW_API_MODEL }}
+
+jobs:
+  codereview:
+    if: ${{ contains(github.event.pull_request.title, ':review') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display PR title
+        run: |
+          echo "PullRequest: ${{ github.event.pull_request.title }}"
+      - uses: anc95/ChatGPT-CodeReview@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ env.REVIEW_API_KEY }}
+          LANGUAGE: Japanese
+          OPENAI_API_ENDPOINT: https://openrouter.ai/api/v1
+          MODEL: ${{ env.REVIEW_API_MODEL }}
+          PROMPT: |
+            あなたは経験豊富なRust開発者として、以下のRustコードをレビューし、`報告形式`に従って重大な問題点のみを簡潔に報告してください。
+
+            **報告形式以外の内容は一切記述しないでください。**
+
+            報告形式：
+            ```markdown
+            ### 問題点
+
+            *   **観点:** (例: バグとエラー)
+            *   **問題の簡潔な説明:**
+            *   **改善提案:**
+            *   **コード例 (必要な場合):** 差分がわかりやすいように記述
+            ```
+
+            レビュー観点：
+            - バグ: 実行時エラー、クラッシュ、未定義動作を引き起こす可能性のあるもの
+            - セキュリティ: 重大な脆弱性
+            - パフォーマンス: 著しいボトルネック
+            - 設計: 保守性を著しく損なう構造
+            - 可読性：可読性が極めて低い箇所
+            - テスト: テストが不足し、クリティカルな問題につながる場合
+
+            軽微な問題、好みの問題は無視してください。
+          top_p: 1
+          temperature: 1
+          max_tokens: 4096
+          MAX_PATCH_LENGTH: 4096
+          IGNORE_PATTERNS: '*.md'
+          INCLUDE_PATTERNS: '*.cpp'

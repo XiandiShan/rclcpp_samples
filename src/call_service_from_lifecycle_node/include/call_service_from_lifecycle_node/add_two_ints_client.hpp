@@ -22,6 +22,7 @@ public:
 
     void execute()
     {
+
         RCLCPP_INFO(node_->get_logger(), "Execute /add_two_ints");
 
         while(!client_->wait_for_service(std::chrono::seconds(5))) {
